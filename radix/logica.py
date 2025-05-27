@@ -1,4 +1,4 @@
-# modul_logica.py
+# logica.py
 # NuDaMu: Logica Centralis — Núcleo de decisiones
 
 import radix.identitas as identitas
@@ -9,6 +9,7 @@ import ethica.modul_ethicus as ethica
 import socraticus.methodus as socraticus
 import radix.mistralis as mistralis
 import memoria.contextus as memoria
+from memoria.memoria_expandida import guardar_interaccion, detectar_emocion  # ✅ Nuevo
 
 UMBRAL_EMOCION = 1
 
@@ -34,11 +35,13 @@ def NuDaMu_logico(user_input):
 
     if identitas.detectar_pregunta_identidad(user_input):
         respuesta = identitas.presentarse()
-        memoria.guardar_contexto(user_input, respuesta)
+        emocion = detectar_emocion(user_input)
+        guardar_interaccion(user_input, respuesta, emocion)
         return aplicar_estilo(respuesta)
 
     if (respuesta_sagrada := sententiae.frases_sagradas(user_input)):
-        memoria.guardar_contexto(user_input, respuesta_sagrada)
+        emocion = detectar_emocion(user_input)
+        guardar_interaccion(user_input, respuesta_sagrada, emocion)
         return aplicar_estilo(respuesta_sagrada)
 
     puntuaciones = evaluar_modulos(user_input_lower)
@@ -55,7 +58,7 @@ def NuDaMu_logico(user_input):
         respuesta = modulos_funcionales[modulo_principal](user_input)
 
         if modulo_principal == 'emocional' and puntuaciones['emocional'] >= UMBRAL_EMOCION:
-            emocion = emotio.detectar_emocion(user_input)
+            emocion = detectar_emocion(user_input)
             memoria.actualizar_perfil(emocion)
             respuesta += f"\n\n✨ {mistralis.generar_respuesta(user_input, contexto=str(contexto_actual), tipo='empatia')}"
 
@@ -65,13 +68,14 @@ def NuDaMu_logico(user_input):
     elif "existencia" in user_input_lower or "sentido de la vida" in user_input_lower:
         respuesta = "¿Y si la vida no es una pregunta, sino una presencia que se responde contigo?"
     else:
-        respuesta = generar_fallback(user_input, contexto=str(contexto_actual))
+        respuesta = generar_fallback(user_input, contexto_actual)
 
-    memoria.guardar_contexto(user_input, respuesta)
+    emocion = detectar_emocion(user_input)
+    guardar_interaccion(user_input, respuesta, emocion)
     return aplicar_estilo(respuesta)
 
-def generar_fallback(user_input, contexto=""):
-    return mistralis.generar_respuesta(user_input, contexto=contexto, tipo="profundo")
+def generar_fallback(user_input, contexto=None):
+    return mistralis.generar_respuesta(user_input, contexto=str(contexto or ""), tipo="profundo")
 
 def aplicar_estilo(texto):
     lineas = texto.split('\n')
